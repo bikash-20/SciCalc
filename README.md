@@ -4,8 +4,6 @@
 A beautiful, modern scientific & basic calculator built with **React + Vite + Tailwind CSS v4**.
 100% frontend — no backend, no API keys. Deploys to Vercel in minutes.
 
-![stack](https://img.shields.io/badge/React_19-Vite_6-Tailwind_v4-8b7cf7)
-
 ## Features
 
 ###  Math engine
