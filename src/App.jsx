@@ -3,7 +3,7 @@ import Display from './components/Display.jsx'
 import Keypad from './components/Keypad.jsx'
 import InstallBanner from './components/InstallBanner.jsx'
 import HistoryDrawer, { HistoryList } from './components/HistoryDrawer.jsx'
-import { SunIcon, MoonIcon, TrashIcon } from './components/Icons.jsx'
+import { SunIcon, MoonIcon, HistoryIcon, TrashIcon } from './components/Icons.jsx'
 import { useCalculator } from './hooks/useCalculator.js'
 
 const THEME_KEY = 'scicalc.theme.v1'
