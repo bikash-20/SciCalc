@@ -2,9 +2,9 @@ import { useState } from 'react'
 import { CopyIcon, CheckIcon, DeleteIcon } from './Icons.jsx'
 
 function sizeClass(len) {
-  if (len <= 9) return 'text-5xl sm:text-6xl'
-  if (len <= 13) return 'text-4xl sm:text-5xl'
-  return 'text-3xl sm:text-4xl'
+  if (len <= 9) return 'text-5xl sm:text-6xl lg:text-7xl'
+  if (len <= 13) return 'text-4xl sm:text-5xl lg:text-6xl'
+  return 'text-3xl sm:text-4xl lg:text-5xl'
 }
 
 /**

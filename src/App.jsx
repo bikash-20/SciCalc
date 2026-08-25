@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import Display from './components/Display.jsx'
 import Keypad from './components/Keypad.jsx'
-import HistoryDrawer from './components/HistoryDrawer.jsx'
-import { SunIcon, MoonIcon, HistoryIcon } from './components/Icons.jsx'
+import HistoryDrawer, { HistoryList } from './components/HistoryDrawer.jsx'
+import { SunIcon, MoonIcon, HistoryIcon, DownloadIcon, TrashIcon } from './components/Icons.jsx'
 import { useCalculator } from './hooks/useCalculator.js'
 
 const THEME_KEY = 'scicalc.theme.v1'
@@ -12,6 +12,17 @@ export default function App() {
   const [theme, setTheme] = useState(() => localStorage.getItem(THEME_KEY) ?? 'dark')
   const [scientific, setScientific] = useState(true)
   const [historyOpen, setHistoryOpen] = useState(false)
+  const [installPrompt, setInstallPrompt] = useState(null)
+
+  /* PWA: capture the browser's native install prompt */
+  useEffect(() => {
+    const onPrompt = (e) => {
+      e.preventDefault()
+      setInstallPrompt(e)
+    }
+    window.addEventListener('beforeinstallprompt', onPrompt)
+    return () => window.removeEventListener('beforeinstallprompt', onPrompt)
+  }, [])
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark')
@@ -75,7 +86,8 @@ export default function App() {
         <div className="absolute -bottom-40 -right-20 h-[28rem] w-[28rem] rounded-full bg-cyan-glow/20 blur-[130px]" />
       </div>
 
-      <main className="relative z-10 mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-4 py-8 sm:px-6">
+      <main className="app-main relative z-10 mx-auto flex min-h-screen w-full max-w-md flex-col items-center justify-center px-4 pt-safe pb-safe sm:max-w-lg sm:px-6 lg:max-w-5xl lg:flex-row lg:gap-10">
+        <div className="w-full max-w-md sm:max-w-lg lg:max-w-xl">
         {/* header */}
         <header className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
@@ -90,9 +102,24 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-1">
+            {installPrompt && (
+              <button
+                type="button"
+                onClick={async () => {
+                  await installPrompt.prompt()
+                  setInstallPrompt(null)
+                }}
+                aria-label="Install SciCalc as an app"
+                title="Install app"
+                className="flex h-11 w-11 items-center justify-center rounded-xl text-accent-600 transition-colors hover:bg-accent-500/10 cursor-pointer
+                           dark:text-accent-300 dark:hover:bg-white/10"
+              >
+                <DownloadIcon />
+              </button>
+            )}
             <button type="button" onClick={() => setHistoryOpen(true)} aria-label="History (H)"
-              className="p-2.5 rounded-xl text-slate-500 hover:bg-slate-900/5 hover:text-slate-700
-                         dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-white transition-colors cursor-pointer">
+              className="flex h-11 w-11 items-center justify-center rounded-xl text-slate-500 transition-colors hover:bg-slate-900/5 hover:text-slate-700
+                         dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-white cursor-pointer lg:hidden">
               <HistoryIcon />
             </button>
             <button type="button"
@@ -144,6 +171,26 @@ export default function App() {
           Keyboard works — digits, + − * / ^ % !, Enter = equals, Esc = clear,
           s/c/t/r/l/g for functions, H history
         </p>
+        </div>
+
+        {/* persistent history side panel — large screens & tablets landscape */}
+        <aside className="hidden w-80 shrink-0 lg:block">
+          <div className="overflow-hidden rounded-3xl border border-slate-900/5 bg-white/70 shadow-xl shadow-slate-900/5 backdrop-blur-xl
+                          dark:border-white/10 dark:bg-ink-900/70 dark:shadow-black/20">
+            <header className="flex items-center justify-between border-b border-slate-900/5 px-5 py-4 dark:border-white/5">
+              <h2 className="font-display text-lg font-semibold">History</h2>
+              {calc.history.length > 0 && (
+                <button type="button" onClick={calc.clearHistory} aria-label="Clear history"
+                  className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-rose-500/10 hover:text-rose-500 cursor-pointer">
+                  <TrashIcon />
+                </button>
+              )}
+            </header>
+            <div className="max-h-[65vh] overflow-y-auto">
+              <HistoryList history={calc.history} onRestore={calc.restoreFromHistory} />
+            </div>
+          </div>
+        </aside>
       </main>
 
       <HistoryDrawer

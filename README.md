@@ -31,6 +31,18 @@ A beautiful, modern scientific & basic calculator built with **React + Vite + Ta
 - Accessible: ≥44 px touch targets, `aria-label`s on every key, focus rings,
   `aria-live` result announcements, reduced-motion support, SVG icons only
 
+### 📱 PWA
+- **Installable** — "Add to Home Screen" on iOS, one-tap install button on Chrome/Edge
+- **Offline-ready** — service worker caches the app shell, assets, and fonts
+- Maskable app icons, standalone display, safe-area aware on notched devices
+
+## Auto-deploy (vercel.json)
+
+`vercel.json` pins the framework preset (**Vite**), build command, and output directory,
+adds immutable caching for hashed `/assets/*`, no-cache for `sw.js`/HTML, SPA rewrites,
+and standard security headers. Connect the GitHub repo once at
+[vercel.com/new](https://vercel.com/new) — every push to `main` deploys automatically.
+
 ## Keyboard shortcuts
 
 | Keys | Action |

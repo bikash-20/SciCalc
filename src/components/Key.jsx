@@ -38,9 +38,9 @@ export default function Key({
       aria-pressed={active || undefined}
       onClick={onPress}
       className={[
-        // touch target + rhythm (≥44px, grows on larger screens)
-        'flex items-center justify-center min-h-[48px] sm:min-h-[54px]',
-        'rounded-2xl font-ui text-base sm:text-lg font-medium select-none',
+        // touch target + rhythm (≥44px, scales up on larger screens)
+        'flex items-center justify-center min-h-[48px] sm:min-h-[54px] lg:min-h-[62px] xl:min-h-[68px]',
+        'rounded-2xl font-ui text-base sm:text-lg lg:text-xl font-medium select-none touch-manipulation',
         'transition-[transform,background-color,filter] duration-100 ease-out',
         'active:scale-[0.94] focus-visible:outline-2 focus-visible:outline-accent-500',
         'focus-visible:outline-offset-2 cursor-pointer',
