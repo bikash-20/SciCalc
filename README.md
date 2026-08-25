@@ -1,4 +1,5 @@
-# SciCalc — Scientific Calculator ✨
+# SciCalc — Scientific Calculator 
+<img width="1312" height="871" alt="image" src="https://github.com/user-attachments/assets/af4ff525-b6f1-4564-980a-a5147f328c58" />
 
 A beautiful, modern scientific & basic calculator built with **React + Vite + Tailwind CSS v4**.
 100% frontend — no backend, no API keys. Deploys to Vercel in minutes.
@@ -7,7 +8,7 @@ A beautiful, modern scientific & basic calculator built with **React + Vite + Ta
 
 ## Features
 
-### 🧮 Math engine
+###  Math engine
 - Hand-written tokenizer → recursive-descent parser → evaluator (**no `eval()`**, no math library)
 - Proper operator precedence, parentheses, right-associative power (`2^3^2 = 512`)
 - Implicit multiplication: `2π`, `3(4+1)`, `(1+2)(3+4)`
@@ -15,7 +16,7 @@ A beautiful, modern scientific & basic calculator built with **React + Vite + Ta
 - Phone-style percent: `200+10% → 220`, `200×10% → 20`
 - Friendly errors: *"Can't divide by zero"*, *"Out of domain (−1…1)"*, unbalanced parens…
 
-### ⚛️ Calculator
+###  Calculator
 - **Basic mode**: classic 4-column pad
 - **Scientific mode**: `sin cos tan` (+ inverses via **2nd**), `ln log √ x² xʸ n! π e % ±`
 - **DEG / RAD** toggle (persisted)
@@ -24,14 +25,14 @@ A beautiful, modern scientific & basic calculator built with **React + Vite + Ta
 - History drawer — restore any past expression (persisted, last 50)
 - Full keyboard support + copy-result-to-clipboard
 
-### 🎨 Design
+###  Design
 - Dark-first glassmorphism UI with ambient gradient blobs
 - Light/dark theme toggle (persisted), Space Grotesk + Inter typography
 - Tabular numerals for a rock-steady display, springy key-press micro-interactions
 - Accessible: ≥44 px touch targets, `aria-label`s on every key, focus rings,
   `aria-live` result announcements, reduced-motion support, SVG icons only
 
-### 📱 PWA
+###  PWA
 - **Installable** — "Add to Home Screen" on iOS, one-tap install button on Chrome/Edge
 - **Offline-ready** — service worker caches the app shell, assets, and fonts
 - Maskable app icons, standalone display, safe-area aware on notched devices
