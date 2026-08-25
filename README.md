@@ -1,4 +1,4 @@
-# SciCalc — Scientific Calculator 
+# SciCalc — Scientific Calculator https://sci-calc-eta.vercel.app/
 <img width="1312" height="871" alt="image" src="https://github.com/user-attachments/assets/af4ff525-b6f1-4564-980a-a5147f328c58" />
 
 A beautiful, modern scientific & basic calculator built with **React + Vite + Tailwind CSS v4**.
