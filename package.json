@@ -1,0 +1,23 @@
+{
+  "name": "scientific-calculator",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "A beautiful scientific & basic calculator built with React, Vite and Tailwind CSS",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "node src/engine/engine.test.js"
+  },
+  "dependencies": {
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.8",
+    "@vitejs/plugin-react": "^4.5.0",
+    "tailwindcss": "^4.1.8",
+    "vite": "^6.3.5"
+  }
+}

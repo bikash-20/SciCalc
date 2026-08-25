@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+/* class-based dark mode (we toggle .dark on <html>) */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* Typography */
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-ui: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  /* Brand accents */
+  --color-accent-100: #e9e7ff;
+  --color-accent-200: #d6cfff;
+  --color-accent-300: #bcb0fb;
+  --color-accent-400: #a78bfa;
+  --color-accent-500: #8b7cf7;
+  --color-accent-600: #7c5cf0;
+  --color-cyan-glow: #22d3ee;
+
+  /* Dark surfaces */
+  --color-ink-950: #0b0d14;
+  --color-ink-900: #12141f;
+  --color-ink-800: #1b1e2e;
+  --color-ink-700: #262a3f;
+
+  /* Light surfaces */
+  --color-paper-50: #f7f7fb;
+  --color-paper-100: #eeeef6;
+  --color-paper-200: #e2e2ee;
+
+  --radius-xl2: 1.25rem;
+
+  --animate-pop-in: pop-in 0.25s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+
+  @keyframes pop-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px) scale(0.98);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Tabular numerals keep the display rock-steady while typing */
+.numeric {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
