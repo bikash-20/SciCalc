@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
 import Display from './components/Display.jsx'
 import Keypad from './components/Keypad.jsx'
+import InstallBanner from './components/InstallBanner.jsx'
 import HistoryDrawer, { HistoryList } from './components/HistoryDrawer.jsx'
-import { SunIcon, MoonIcon, HistoryIcon, DownloadIcon, TrashIcon } from './components/Icons.jsx'
+import { SunIcon, MoonIcon, TrashIcon } from './components/Icons.jsx'
 import { useCalculator } from './hooks/useCalculator.js'
 
 const THEME_KEY = 'scicalc.theme.v1'
@@ -12,17 +13,6 @@ export default function App() {
   const [theme, setTheme] = useState(() => localStorage.getItem(THEME_KEY) ?? 'dark')
   const [scientific, setScientific] = useState(true)
   const [historyOpen, setHistoryOpen] = useState(false)
-  const [installPrompt, setInstallPrompt] = useState(null)
-
-  /* PWA: capture the browser's native install prompt */
-  useEffect(() => {
-    const onPrompt = (e) => {
-      e.preventDefault()
-      setInstallPrompt(e)
-    }
-    window.addEventListener('beforeinstallprompt', onPrompt)
-    return () => window.removeEventListener('beforeinstallprompt', onPrompt)
-  }, [])
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark')
@@ -102,21 +92,6 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-1">
-            {installPrompt && (
-              <button
-                type="button"
-                onClick={async () => {
-                  await installPrompt.prompt()
-                  setInstallPrompt(null)
-                }}
-                aria-label="Install SciCalc as an app"
-                title="Install app"
-                className="flex h-11 w-11 items-center justify-center rounded-xl text-accent-600 transition-colors hover:bg-accent-500/10 cursor-pointer
-                           dark:text-accent-300 dark:hover:bg-white/10"
-              >
-                <DownloadIcon />
-              </button>
-            )}
             <button type="button" onClick={() => setHistoryOpen(true)} aria-label="History (H)"
               className="flex h-11 w-11 items-center justify-center rounded-xl text-slate-500 transition-colors hover:bg-slate-900/5 hover:text-slate-700
                          dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-white cursor-pointer lg:hidden">
@@ -171,6 +146,19 @@ export default function App() {
           Keyboard works — digits, + − * / ^ % !, Enter = equals, Esc = clear,
           s/c/t/r/l/g for functions, H history
         </p>
+
+        {/* developer credit */}
+        <footer className="mt-3 text-center text-xs text-slate-400 dark:text-slate-600">
+          Crafted by{' '}
+          <a
+            href="https://github.com/bikash-20"
+            target="_blank"
+            rel="noreferrer"
+            className="font-medium text-slate-500 underline-offset-2 transition-colors hover:text-accent-600 hover:underline dark:text-slate-500 dark:hover:text-accent-300"
+          >
+            Bikash Talukder
+          </a>
+        </footer>
         </div>
 
         {/* persistent history side panel — large screens & tablets landscape */}
@@ -200,6 +188,9 @@ export default function App() {
         onRestore={calc.restoreFromHistory}
         onClear={calc.clearHistory}
       />
+
+      {/* PWA install promo */}
+      <InstallBanner />
     </div>
   )
 }

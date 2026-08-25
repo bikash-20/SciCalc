@@ -97,6 +97,10 @@ src/
 └── index.css        # Tailwind v4 design tokens (@theme)
 ```
 
+## Author
+
+**Bikash Talukder** · [github.com/bikash-20](https://github.com/bikash-20)
+
 ## License
 
 MIT — build something great with it.
