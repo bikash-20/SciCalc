@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { safeEvaluate, formatResult } from '../engine/evaluate.js'
+import { getAllHistory, putHistory } from '../lib/db.js'
 
 /**
  * Calculator state machine.
@@ -12,6 +13,7 @@ import { safeEvaluate, formatResult } from '../engine/evaluate.js'
 const OPERATORS = '+-×÷^'
 const HISTORY_KEY = 'scicalc.history.v1'
 const ANGLE_KEY = 'scicalc.angleMode.v1'
+const HISTORY_MAX = 50 // keep storage bounded
 
 const load = (key, fallback) => {
   try {
@@ -69,8 +71,38 @@ export function useCalculator() {
   const [angleMode, setAngleMode] = useState(() => load(ANGLE_KEY, 'deg'))
   const [history, setHistory] = useState(() => load(HISTORY_KEY, []))
 
+  // Refs for durable, debounced IndexedDB persistence
+  const historyHydratedRef = useRef(false)
+  const idbTimerRef = useRef(null)
+
+  // Hydrate history from IndexedDB (source of truth) once, just after mount.
+  // localStorage only covered the very first paint.
   useEffect(() => {
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(history))
+    let alive = true
+    getAllHistory().then((rows) => {
+      if (!alive) return
+      if (rows.length > 0) setHistory(rows)
+      historyHydratedRef.current = true
+    })
+    return () => {
+      alive = false
+      clearTimeout(idbTimerRef.current)
+    }
+  }, [])
+
+  // Persist history: instant localStorage mirror (fast reloads) plus a
+  // debounced, durable IndexedDB write that coalesces rapid changes.
+  useEffect(() => {
+    try {
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(history))
+    } catch {
+      /* quota exceeded / private mode — non-fatal */
+    }
+    if (!historyHydratedRef.current) return // don't clobber DB before hydration settles
+    clearTimeout(idbTimerRef.current)
+    idbTimerRef.current = setTimeout(() => {
+      putHistory(history.slice(0, HISTORY_MAX))
+    }, 400)
   }, [history])
 
   useEffect(() => {

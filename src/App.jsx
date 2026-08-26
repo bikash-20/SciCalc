@@ -13,6 +13,18 @@ export default function App() {
   const [theme, setTheme] = useState(() => localStorage.getItem(THEME_KEY) ?? 'dark')
   const [scientific, setScientific] = useState(true)
   const [historyOpen, setHistoryOpen] = useState(false)
+  const [online, setOnline] = useState(() => navigator.onLine)
+
+  useEffect(() => {
+    const goOnline = () => setOnline(true)
+    const goOffline = () => setOnline(false)
+    window.addEventListener('online', goOnline)
+    window.addEventListener('offline', goOffline)
+    return () => {
+      window.removeEventListener('online', goOnline)
+      window.removeEventListener('offline', goOffline)
+    }
+  }, [])
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark')
@@ -191,6 +203,21 @@ export default function App() {
 
       {/* PWA install promo */}
       <InstallBanner />
+
+      {/* offline status indicator */}
+      {!online && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed left-1/2 top-3 z-50 flex -translate-x-1/2 items-center gap-2 rounded-full border border-amber-500/20 bg-white/80 px-3 py-1.5 backdrop-blur
+                     dark:bg-ink-900/80"
+        >
+          <span className="h-2 w-2 shrink-0 animate-pulse rounded-full bg-amber-500" aria-hidden />
+          <span className="font-ui text-xs font-medium text-amber-700 dark:text-amber-300">
+            Offline — everything is saved on this device
+          </span>
+        </div>
+      )}
     </div>
   )
 }

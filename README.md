@@ -32,8 +32,13 @@ A beautiful, modern scientific & basic calculator built with **React + Vite + Ta
 
 ###  PWA
 - **Installable** — "Add to Home Screen" on iOS, one-tap install button on Chrome/Edge
-- **Offline-ready** — service worker caches the app shell, assets, and fonts
+- **Fully offline-capable** — service worker precaches the app shell *and* the
+  hashed JS/CSS bundle on first load (verified with automated offline test)
+- **Durable history** via **IndexedDB** (`src/lib/db.js`) with a localStorage fast-path
+  and debounced writes — calculations survive reloads and offline sessions
 - Maskable app icons, standalone display, safe-area aware on notched devices
+- **Offline indicator** banner so users know their work is saved locally
+- Runtime caching strategies: cache-first (assets), stale-while-revalidate (fonts)
 
 ## Auto-deploy (vercel.json)
 

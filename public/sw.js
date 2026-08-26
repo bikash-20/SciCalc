@@ -1,5 +1,5 @@
 /* SciCalc service worker — offline-first app shell */
-const VERSION = 'scicalc-v1.0.0'
+const VERSION = 'scicalc-v2.0.1'
 const CORE_CACHE = `${VERSION}-core`
 const ASSET_CACHE = `${VERSION}-assets`
 const FONT_CACHE = `${VERSION}-fonts`
@@ -15,11 +15,35 @@ const CORE_ASSETS = [
   '/apple-touch-icon.png',
 ]
 
+/** Extract the hashed JS/CSS bundle URLs referenced by index.html. */
+async function entryAssetUrls() {
+  const res = await fetch('/index.html')
+  if (!res.ok) return []
+  const html = await res.text()
+  const urls = [...html.matchAll(/(?:src|href)="(\/assets\/[^"]+)"/g)]
+    .map((m) => m[1])
+  return [...new Set(urls)]
+}
+
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CORE_CACHE).then((cache) =>
-      Promise.allSettled(CORE_ASSETS.map((url) => cache.add(url))),
-    ).then(() => self.skipWaiting()),
+    (async () => {
+      const coreCache = await caches.open(CORE_CACHE)
+      await Promise.allSettled(CORE_ASSETS.map((url) => coreCache.add(url)))
+
+      // Precache the hashed build bundle so the app is fully usable
+      // offline even on the very first visit (not just after one live load).
+      try {
+        const urls = await entryAssetUrls()
+        if (urls.length) {
+          const assetCache = await caches.open(ASSET_CACHE)
+          await Promise.allSettled(urls.map((url) => assetCache.add(url)))
+        }
+      } catch {
+        /* first-ever install may still be cold; fetch-time cache-first covers it */
+      }
+      await self.skipWaiting()
+    })(),
   )
 })
 
