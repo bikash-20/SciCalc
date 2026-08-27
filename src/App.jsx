@@ -48,38 +48,38 @@ export default function App() {
       if (e.metaKey || e.ctrlKey || e.altKey) return
       const k = e.key
 
-      if (/^[0-9]$/.test(k)) return calc.pressDigit(k)
-      if (k === '.') return calc.pressDot()
-      if (k === '+' || k === '-') return calc.pressOperator(k)
+      if (/^[0-9]$/.test(k)) return calc.actions.pressDigit(k)
+      if (k === '.') return calc.actions.pressDot()
+      if (k === '+' || k === '-') return calc.actions.pressOperator(k)
       if (k === '*' || k.toLowerCase() === 'x') {
         e.preventDefault()
-        return calc.pressOperator('×')
+        return calc.actions.pressOperator('×')
       }
       if (k === '/') {
         e.preventDefault()
-        return calc.pressOperator('÷')
+        return calc.actions.pressOperator('÷')
       }
-      if (k === '^') return calc.insert('^')
-      if (k === '%') return calc.insert('%')
-      if (k === '!') return calc.insert('!')
-      if (k === '(' || k === ')') return calc.insert(k)
+      if (k === '^') return calc.actions.insert('^')
+      if (k === '%') return calc.actions.insert('%')
+      if (k === '!') return calc.actions.insert('!')
+      if (k === '(' || k === ')') return calc.actions.insert(k)
       if (k === 'Enter' || k === '=') {
         e.preventDefault()
-        return calc.pressEquals()
+        return calc.actions.pressEquals()
       }
-      if (k === 'Backspace') return calc.pressBackspace()
-      if (k === 'Escape' || k === 'Delete') return calc.pressClear()
+      if (k === 'Backspace') return calc.actions.pressBackspace()
+      if (k === 'Escape' || k === 'Delete') return calc.actions.pressClear()
 
       const lower = k.toLowerCase()
-      if (lower === 'p') return calc.insert('π')
-      if (lower === 's') return calc.pressFunction('sin')
-      if (lower === 'c') return calc.pressFunction('cos')
-      if (lower === 't') return calc.pressFunction('tan')
-      if (lower === 'r') return calc.pressFunction('sqrt')
-      if (lower === 'l') return calc.pressFunction('ln')
-      if (lower === 'g') return calc.pressFunction('log')
+      if (lower === 'p') return calc.actions.insert('π')
+      if (lower === 's') return calc.actions.pressFunction('sin')
+      if (lower === 'c') return calc.actions.pressFunction('cos')
+      if (lower === 't') return calc.actions.pressFunction('tan')
+      if (lower === 'r') return calc.actions.pressFunction('sqrt')
+      if (lower === 'l') return calc.actions.pressFunction('ln')
+      if (lower === 'g') return calc.actions.pressFunction('log')
       if (lower === 'h') setHistoryOpen((v) => !v)
-      if (lower === 'd') calc.setAngleMode(calc.angleMode === 'deg' ? 'rad' : 'deg')
+      if (lower === 'd') calc.actions.setAngleMode(calc.angleMode === 'deg' ? 'rad' : 'deg')
     }
 
     window.addEventListener('keydown', onKey)
@@ -184,9 +184,9 @@ export default function App() {
               preview={calc.preview}
               justEvaluated={calc.justEvaluated}
               angleMode={calc.angleMode}
-              onToggleAngle={() => calc.setAngleMode(calc.angleMode === 'deg' ? 'rad' : 'deg')}
+              onToggleAngle={() => calc.actions.setAngleMode(calc.angleMode === 'deg' ? 'rad' : 'deg')}
               onCopy={copyText}
-              onBackspace={calc.pressBackspace}
+              onBackspace={calc.actions.pressBackspace}
             />
 
             <div className="my-4 flex items-center rounded-full bg-slate-900/5 p-1 text-sm font-medium
@@ -223,7 +223,7 @@ export default function App() {
                 exit={{ opacity: 0, y: -6 }}
                 transition={{ duration: 0.18 }}
               >
-                <Keypad scientific={scientific} calc={calc} />
+                <Keypad scientific={scientific} actions={calc.actions} angleMode={calc.angleMode} />
               </motion.div>
             </AnimatePresence>
           </motion.section>
@@ -257,7 +257,7 @@ export default function App() {
             <header className="flex items-center justify-between border-b border-slate-900/5 px-5 py-4 dark:border-white/5">
               <h2 className="font-display text-lg font-semibold">History</h2>
               {calc.history.length > 0 && (
-                <button type="button" onClick={calc.clearHistory} aria-label="Clear history"
+                <button type="button" onClick={calc.actions.clearHistory} aria-label="Clear history"
                   className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-rose-500/10 hover:text-rose-500 cursor-pointer
                              focus-visible:outline-2 focus-visible:outline-rose-500 focus-visible:outline-offset-2">
                   <TrashIcon />
@@ -265,7 +265,7 @@ export default function App() {
               )}
             </header>
             <div className="max-h-[65vh] overflow-y-auto">
-              <HistoryList history={calc.history} onRestore={calc.restoreFromHistory} />
+              <HistoryList history={calc.history} onRestore={calc.actions.restoreFromHistory} />
             </div>
           </motion.div>
         </aside>
@@ -275,8 +275,8 @@ export default function App() {
         open={historyOpen}
         history={calc.history}
         onClose={() => setHistoryOpen(false)}
-        onRestore={calc.restoreFromHistory}
-        onClear={calc.clearHistory}
+        onRestore={calc.actions.restoreFromHistory}
+        onClear={calc.actions.clearHistory}
       />
 
       <InstallBanner />

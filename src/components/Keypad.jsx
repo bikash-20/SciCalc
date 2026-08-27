@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { memo, useMemo, useState } from 'react'
+import { memo, useCallback, useMemo, useState } from 'react'
 import Key from './Key.jsx'
 
 /** What each science key becomes while "2nd" is active. */
@@ -33,27 +33,36 @@ function AnimatedKey({ children, ...props }) {
   )
 }
 
-function useKeyActions(calc) {
+/**
+ * Build a stable handler map from the calculator's action refs.
+ * Re-creates only when `actions` or `angleMode` reference changes — both
+ * are stable across input changes, so this stays put while typing.
+ */
+function useKeyActions(actions, angleMode) {
   return useMemo(
     () => ({
-      digit: (d) => calc.pressDigit(d),
-      dot: () => calc.pressDot(),
-      op: (op) => calc.pressOperator(op),
-      fn: (name) => calc.pressFunction(name),
-      insert: (text, opts) => calc.insert(text, opts),
-      clear: () => calc.pressClear(),
-      back: () => calc.pressBackspace(),
-      sign: () => calc.pressSign(),
-      eq: () => calc.pressEquals(),
-      toggleAngle: () => calc.setAngleMode(calc.angleMode === 'deg' ? 'rad' : 'deg'),
+      digit: (d) => actions.pressDigit(d),
+      dot: actions.pressDot,
+      op: actions.pressOperator,
+      fn: actions.pressFunction,
+      insert: actions.insert,
+      clear: actions.pressClear,
+      back: actions.pressBackspace,
+      sign: actions.pressSign,
+      eq: actions.pressEquals,
+      toggleAngle: actions.setAngleMode
+        ? () => actions.setAngleMode(angleMode === 'deg' ? 'rad' : 'deg')
+        : () => {},
     }),
-    [calc],
+    [actions, angleMode],
   )
 }
 
-function SciencePad({ calc }) {
+function SciencePad({ actions, angleMode }) {
   const [second, setSecond] = useState(false)
-  const a = useKeyActions(calc)
+  const a = useKeyActions(actions, angleMode)
+
+  const toggleSecond = useCallback(() => setSecond((v) => !v), [])
 
   const sciFn = (name, plainLabel, ariaLabel) => {
     const alt = second ? SECOND_MAP[name] : undefined
@@ -76,9 +85,9 @@ function SciencePad({ calc }) {
   return (
     <motion.div className="grid grid-cols-5 gap-2" variants={stagger} initial="hidden" animate="show">
       <AnimatedKey label="2nd" variant="ghost" active={second} ariaLabel="Second function shift"
-           onPress={() => setSecond((v) => !v)} />
-      <AnimatedKey label={calc.angleMode === 'deg' ? 'DEG' : 'RAD'} variant="ghost"
-           ariaLabel={`Angle unit: ${calc.angleMode === 'deg' ? 'degrees' : 'radians'} — tap to switch`}
+           onPress={toggleSecond} />
+      <AnimatedKey label={angleMode === 'deg' ? 'DEG' : 'RAD'} variant="ghost"
+           ariaLabel={`Angle unit: ${angleMode === 'deg' ? 'degrees' : 'radians'} — tap to switch`}
            onPress={a.toggleAngle} />
       <AnimatedKey label="(" variant="fn" ariaLabel="Open parenthesis" onPress={() => a.insert('(')} />
       <AnimatedKey label=")" variant="fn" ariaLabel="Close parenthesis" onPress={() => a.insert(')')} />
@@ -117,8 +126,8 @@ function SciencePad({ calc }) {
   )
 }
 
-function BasicPad({ calc }) {
-  const a = useKeyActions(calc)
+function BasicPad({ actions }) {
+  const a = useKeyActions(actions, 'deg')
   const digits = (...ds) =>
     ds.map((d) => <AnimatedKey key={d} label={d} onPress={() => a.digit(d)} />)
 
@@ -146,6 +155,6 @@ function BasicPad({ calc }) {
   )
 }
 
-export default memo(function Keypad({ scientific, calc }) {
-  return scientific ? <SciencePad calc={calc} /> : <BasicPad calc={calc} />
+export default memo(function Keypad({ scientific, actions, angleMode }) {
+  return scientific ? <SciencePad actions={actions} angleMode={angleMode} /> : <BasicPad actions={actions} />
 })

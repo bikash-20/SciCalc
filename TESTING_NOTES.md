@@ -42,6 +42,26 @@ on every keystroke because:
 - `Display`: `memo` + `handleCopy` in `useCallback`.
 - `HistoryList`: `memo` so typing doesn't repaint the history.
 
+### Reported user bug — dot → operator still lagged
+**Root cause:** `useDeferredValue` keeps returning the *previous* value while
+new input arrives. When the user typed `.` then `+` quickly, `preview` was
+clobbered between renders and the keypad tree still invalidated. The hook
+also returned a single object containing both state and action refs, so any
+state change (even unrelated ones) replaced every consumer's `calc` identity.
+
+**Fix shipped in this pass:**
+- `useCalculator` now exposes **two references**: a stable `actions` bundle
+  (memoized with `useCallback` deps so its identity only flips when a real
+  callback identity changes) and a `state` bundle. Consumers can subscribe to
+  exactly what they need.
+- `preview` is now debounced via a 120 ms `useEffect` timer instead of
+  `useDeferredValue` — rapid dot/operator sequences never queue stale previews
+  and the Display only repaints once after typing pauses.
+- `Keypad` accepts `actions` + `angleMode` separately so its `useKeyActions`
+  only invalidates when those specific refs change. The 30 button tree stays
+  put during normal typing.
+- `App.jsx` updated to read `calc.actions.*` everywhere.
+
 ### Other small fixes shipped
 - `App.jsx`: theme init + `localStorage.setItem` wrapped in try/catch for
   private-mode / SSR safety; `navigator.onLine` guarded for SSR.

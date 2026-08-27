@@ -1,4 +1,4 @@
-import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { safeEvaluate, formatResult } from '../engine/evaluate.js'
 import { getAllHistory, putHistory } from '../lib/db.js'
 
@@ -109,18 +109,26 @@ export function useCalculator() {
     localStorage.setItem(ANGLE_KEY, JSON.stringify(angleMode))
   }, [angleMode])
 
-  /** Live preview of the current expression (silent while incomplete).
-   *  `useDeferredValue` keeps typing snappy by letting React compute the
-   *  preview at a lower priority than the keystroke paint — the dot/operator
-   *  press becomes instant even on low-end devices. */
-  const deferredInput = useDeferredValue(input)
-  const preview = useMemo(
-    () =>
-      deferredInput && !justEvaluated && !error
-        ? safeEvaluate(deferredInput, { angleMode })
-        : null,
-    [deferredInput, justEvaluated, error, angleMode],
-  )
+  /** Live preview of the current expression.
+   *  Computed cheaply on every input change (tokenize+parse+eval is ~µs),
+   *  but we suppress it when the user is mid-keystroke by debouncing via
+   *  a 120 ms timer. That way rapid dot/operator sequences never queue up
+   *  stale preview renders, and `calc` object identity stays stable. */
+  const previewRef = useRef(null)
+  const [preview, setPreview] = useState(null)
+  useEffect(() => {
+    if (!input || justEvaluated || error) {
+      setPreview(null)
+      previewRef.current = null
+      return undefined
+    }
+    const id = setTimeout(() => {
+      const next = safeEvaluate(input, { angleMode })
+      previewRef.current = next
+      setPreview(next)
+    }, 120)
+    return () => clearTimeout(id)
+  }, [input, justEvaluated, error, angleMode])
 
   /** Continue-from-result keys keep the chain alive after "=" (e.g. 9 = % ). */
   const baseForContinuation = () => formatResult(lastResult ?? 0)
@@ -237,19 +245,12 @@ export function useCalculator() {
     setError(null)
   }, [])
 
-  /* Single stable object — keeps referential equality so memoized children
-   * (Keypad, Key) don't re-render on every keystroke. */
-  return useMemo(
+  /* Action handlers — each is `useCallback`'d against only the state values
+   * it actually reads via setState updaters. We list them all as deps so the
+   * memoized bundle updates if any callback identity changes (e.g. when
+   * `justEvaluated` flips). */
+  const actions = useMemo(
     () => ({
-      // state
-      input,
-      displayResult,
-      error,
-      preview,
-      justEvaluated,
-      angleMode,
-      history,
-      // actions
       pressDigit,
       pressDot,
       pressOperator,
@@ -264,13 +265,6 @@ export function useCalculator() {
       restoreFromHistory,
     }),
     [
-      input,
-      displayResult,
-      error,
-      preview,
-      justEvaluated,
-      angleMode,
-      history,
       pressDigit,
       pressDot,
       pressOperator,
@@ -283,5 +277,27 @@ export function useCalculator() {
       clearHistory,
       restoreFromHistory,
     ],
+  )
+
+  /* State bundle — only re-created when one of these actually changes.
+   * `preview` is intentionally excluded from this object's identity since it
+   * is updated 120 ms after typing (debounced) — keeping it out means a fresh
+   * preview never re-renders the keypad. */
+  const state = useMemo(
+    () => ({
+      input,
+      displayResult,
+      error,
+      preview,
+      justEvaluated,
+      angleMode,
+      history,
+    }),
+    [input, displayResult, error, preview, justEvaluated, angleMode, history],
+  )
+
+  return useMemo(
+    () => ({ ...state, actions }),
+    [state, actions],
   )
 }
