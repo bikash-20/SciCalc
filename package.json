@@ -11,6 +11,7 @@
     "test": "node src/engine/engine.test.js"
   },
   "dependencies": {
+    "framer-motion": "^13.1.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import { safeEvaluate, formatResult } from '../engine/evaluate.js'
 import { getAllHistory, putHistory } from '../lib/db.js'
 
@@ -109,10 +109,17 @@ export function useCalculator() {
     localStorage.setItem(ANGLE_KEY, JSON.stringify(angleMode))
   }, [angleMode])
 
-  /** Live preview of the current expression (silent while incomplete). */
+  /** Live preview of the current expression (silent while incomplete).
+   *  `useDeferredValue` keeps typing snappy by letting React compute the
+   *  preview at a lower priority than the keystroke paint — the dot/operator
+   *  press becomes instant even on low-end devices. */
+  const deferredInput = useDeferredValue(input)
   const preview = useMemo(
-    () => (input && !justEvaluated && !error ? safeEvaluate(input, { angleMode }) : null),
-    [input, justEvaluated, error, angleMode],
+    () =>
+      deferredInput && !justEvaluated && !error
+        ? safeEvaluate(deferredInput, { angleMode })
+        : null,
+    [deferredInput, justEvaluated, error, angleMode],
   )
 
   /** Continue-from-result keys keep the chain alive after "=" (e.g. 9 = % ). */
@@ -230,27 +237,51 @@ export function useCalculator() {
     setError(null)
   }, [])
 
-  return {
-    // state
-    input,
-    displayResult,
-    error,
-    preview,
-    justEvaluated,
-    angleMode,
-    history,
-    // actions
-    pressDigit,
-    pressDot,
-    pressOperator,
-    pressEquals,
-    pressClear,
-    pressBackspace,
-    pressSign,
-    pressFunction,
-    insert,
-    setAngleMode,
-    clearHistory,
-    restoreFromHistory,
-  }
+  /* Single stable object — keeps referential equality so memoized children
+   * (Keypad, Key) don't re-render on every keystroke. */
+  return useMemo(
+    () => ({
+      // state
+      input,
+      displayResult,
+      error,
+      preview,
+      justEvaluated,
+      angleMode,
+      history,
+      // actions
+      pressDigit,
+      pressDot,
+      pressOperator,
+      pressEquals,
+      pressClear,
+      pressBackspace,
+      pressSign,
+      pressFunction,
+      insert,
+      setAngleMode,
+      clearHistory,
+      restoreFromHistory,
+    }),
+    [
+      input,
+      displayResult,
+      error,
+      preview,
+      justEvaluated,
+      angleMode,
+      history,
+      pressDigit,
+      pressDot,
+      pressOperator,
+      pressEquals,
+      pressClear,
+      pressBackspace,
+      pressSign,
+      pressFunction,
+      insert,
+      clearHistory,
+      restoreFromHistory,
+    ],
+  )
 }

@@ -1,11 +1,11 @@
-import { useEffect } from 'react'
+import { memo, useEffect } from 'react'
 import { CloseIcon, TrashIcon } from './Icons.jsx'
 
 /** Shared list rendering — used by the mobile drawer AND the desktop side panel. */
-export function HistoryList({ history, onRestore }) {
+function HistoryListImpl({ history, onRestore }) {
   if (history.length === 0) {
     return (
-      <p className="mt-10 text-center text-sm text-slate-400 dark:text-slate-500">
+      <p className="mt-10 text-center text-sm text-slate-500 dark:text-slate-400">
         Your calculations will appear here.
       </p>
     )
@@ -17,10 +17,11 @@ export function HistoryList({ history, onRestore }) {
           <button
             type="button"
             onClick={() => onRestore(entry.expr)}
-            className="group w-full rounded-xl px-4 py-3 text-right transition-colors hover:bg-slate-100 dark:hover:bg-ink-800"
+            className="group w-full rounded-xl px-4 py-3 text-right transition-colors hover:bg-rose-500/10 dark:hover:bg-rose-500/10
+                       focus-visible:outline-2 focus-visible:outline-rose-500 focus-visible:outline-offset-2"
           >
-            <div className="numeric truncate text-xs text-slate-400 dark:text-slate-500">{entry.expr}</div>
-            <div className="numeric truncate text-lg font-semibold text-slate-900 group-hover:text-accent-600 dark:text-white dark:group-hover:text-accent-300">
+            <div className="numeric truncate text-xs text-slate-500 dark:text-slate-400">{entry.expr}</div>
+            <div className="numeric truncate text-lg font-semibold text-slate-900 group-hover:text-rose-600 dark:text-white dark:group-hover:text-rose-300">
               {entry.result}
             </div>
           </button>
@@ -34,6 +35,8 @@ export function HistoryList({ history, onRestore }) {
  * Slide-over drawer for phones/tablets (<lg).
  * On large screens App renders HistoryList inline instead.
  */
+export const HistoryList = memo(HistoryListImpl)
+
 export default function HistoryDrawer({ open, history, onClose, onRestore, onClear }) {
   useEffect(() => {
     if (!open) return undefined
@@ -54,9 +57,10 @@ export default function HistoryDrawer({ open, history, onClose, onRestore, onCle
         role="dialog"
         aria-modal="true"
         aria-label="Calculation history"
-        className={`absolute right-0 top-0 h-full w-84 max-w-[88vw] flex flex-col
-                    bg-white dark:bg-ink-900 shadow-2xl
-                    border-l border-slate-900/10 dark:border-white/10
+        className={`absolute right-0 top-0 h-full w-80 max-w-[88vw] flex flex-col
+                    bg-white/85 backdrop-blur-2xl shadow-2xl
+                    border-l border-white/40 dark:bg-ink-900/85
+                    dark:border-white/10
                     transition-transform duration-300 ease-out
                     ${open ? 'translate-x-0' : 'translate-x-full'}`}
       >
@@ -68,7 +72,8 @@ export default function HistoryDrawer({ open, history, onClose, onRestore, onCle
                 type="button"
                 onClick={onClear}
                 aria-label="Clear history"
-                className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-rose-500/10 hover:text-rose-500"
+                className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-rose-500/10 hover:text-rose-500 cursor-pointer
+                           focus-visible:outline-2 focus-visible:outline-rose-500 focus-visible:outline-offset-2"
               >
                 <TrashIcon />
               </button>
@@ -77,8 +82,9 @@ export default function HistoryDrawer({ open, history, onClose, onRestore, onCle
               type="button"
               onClick={onClose}
               aria-label="Close history"
-              className="rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-900/5 hover:text-slate-600
-                         dark:text-slate-500 dark:hover:bg-white/10 dark:hover:text-white"
+              className="rounded-lg p-2 text-slate-500 transition-colors hover:bg-slate-900/5 hover:text-slate-700 cursor-pointer
+                         dark:text-slate-400 dark:hover:bg-white/10 dark:hover:text-white
+                         focus-visible:outline-2 focus-visible:outline-rose-500 focus-visible:outline-offset-2"
             >
               <CloseIcon />
             </button>

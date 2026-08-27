@@ -1,8 +1,11 @@
 # SciCalc — Scientific Calculator https://sci-calc-eta.vercel.app/
 <img width="1312" height="871" alt="image" src="https://github.com/user-attachments/assets/af4ff525-b6f1-4564-980a-a5147f328c58" />
 
-A beautiful, modern scientific & basic calculator built with **React + Vite + Tailwind CSS v4**.
+A beautiful, modern scientific & basic calculator built with **React + Vite + Tailwind CSS v4 + framer-motion**.
 100% frontend — no backend, no API keys. Deploys to Vercel in minutes.
+
+> "Sunset Glass" aesthetic — rose, amber and teal gradient on a frosted, glassy
+> surface. Animations are springy but respect `prefers-reduced-motion`.
 
 ## Features
 
@@ -24,11 +27,15 @@ A beautiful, modern scientific & basic calculator built with **React + Vite + Ta
 - Full keyboard support + copy-result-to-clipboard
 
 ###  Design
-- Dark-first glassmorphism UI with ambient gradient blobs
+- "Sunset Glass" aesthetic: rose + amber + teal gradient on a frosted glass
+  surface, animated ambient blobs, paper-grain display card
 - Light/dark theme toggle (persisted), Space Grotesk + Inter typography
-- Tabular numerals for a rock-steady display, springy key-press micro-interactions
-- Accessible: ≥44 px touch targets, `aria-label`s on every key, focus rings,
-  `aria-live` result announcements, reduced-motion support, SVG icons only
+- **framer-motion** micro-interactions: springy key taps, layout-animated
+  mode pill, fade+rotate theme toggle, spring-in display card
+- Tabular numerals for a rock-steady display
+- Accessible: ≥44 px touch targets, `aria-label`s on every key, visible
+  focus rings, `aria-live` result announcements, reduced-motion support,
+  SVG icons only
 
 ###  PWA
 - **Installable** — "Add to Home Screen" on iOS, one-tap install button on Chrome/Edge
@@ -104,6 +111,11 @@ src/
 ## Author
 
 **Bikash Talukder** · [github.com/bikash-20](https://github.com/bikash-20)
+
+## Testing notes
+
+See `TESTING_NOTES.md` for the live QA log — engine results, manual smoke
+checklist, and known limitations.
 
 ## License
 

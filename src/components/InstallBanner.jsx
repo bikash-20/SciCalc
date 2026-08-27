@@ -71,13 +71,13 @@ export default function InstallBanner() {
     >
       <div
         className={`flex w-full max-w-md items-center gap-3 rounded-2xl border p-3 pr-2 shadow-2xl backdrop-blur-xl
-                    border-white/15 bg-ink-900/90 text-white shadow-black/40
+                    border-white/20 bg-ink-900/90 text-white shadow-black/40
                     dark:border-white/10 sm:max-w-lg`}
       >
         {/* mini app icon */}
         <span
           aria-hidden
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-accent-500 to-cyan-glow shadow-lg shadow-accent-500/30"
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-sunset shadow-lg shadow-rose-500/30"
         >
           <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="white"
                strokeWidth="2" strokeLinecap="round">
@@ -100,8 +100,8 @@ export default function InstallBanner() {
             type="button"
             onClick={install}
             disabled={!promptEvent}
-            className="flex shrink-0 items-center gap-1.5 rounded-xl bg-gradient-to-br from-accent-500 to-cyan-glow
-                       px-4 py-2.5 font-ui text-sm font-semibold text-white shadow-lg shadow-accent-500/30
+            className="flex shrink-0 items-center gap-1.5 rounded-xl bg-sunset
+                       px-4 py-2.5 font-ui text-sm font-semibold text-white shadow-lg shadow-rose-500/30
                        transition hover:brightness-110 active:scale-[0.96] cursor-pointer
                        focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white
                        disabled:opacity-50"
