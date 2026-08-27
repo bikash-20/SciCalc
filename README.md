@@ -95,17 +95,24 @@ No environment variables needed.
 
 ```
 src/
-├── engine/          # pure math core (no React)
-│   ├── tokenizer.js #   glyphs -> tokens
-│   ├── parser.js    #   tokens -> AST (recursive descent)
-│   ├── evaluate.js  #   AST -> number, formatting, safe wrapper
+├── engine/             # pure math core (no React)
+│   ├── tokenizer.js    #   glyphs -> tokens
+│   ├── parser.js       #   tokens -> AST (recursive descent)
+│   ├── evaluate.js     #   AST -> number, formatting, safe wrapper
 │   └── engine.test.js
 ├── hooks/
-│   └── useCalculator.js  # state machine: input, preview, history, persistence
+│   ├── useLocalStorageState.js   # SSR/private-mode-safe JSON state
+│   ├── useHistory.js             # state + localStorage + IndexedDB
+│   ├── useExpression.js          # input, preview, press* actions
+│   ├── useKeyboardShortcuts.js   # global key listener bound once
+│   └── useCalculator.js          # composes the four above
+├── lib/
+│   └── db.js          # IndexedDB wrapper (never rejects)
 ├── components/
-│   ├── Display.jsx  Keypad.jsx  Key.jsx  HistoryDrawer.jsx  Icons.jsx
-├── App.jsx          # layout, theme, keyboard bindings
-└── index.css        # Tailwind v4 design tokens (@theme)
+│   ├── Display.jsx  Keypad.jsx  Key.jsx
+│   ├── HistoryDrawer.jsx  InstallBanner.jsx  Icons.jsx
+├── App.jsx           # layout, theme, ambient blobs
+└── index.css         # Tailwind v4 design tokens (@theme)
 ```
 
 ## Author

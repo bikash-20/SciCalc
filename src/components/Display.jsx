@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { memo, useCallback, useState } from 'react'
-import { CopyIcon, CheckIcon, DeleteIcon } from './Icons.jsx'
+import { CopyIcon, CheckIcon, BackspaceIcon } from './Icons.jsx'
 
 function sizeClass(len) {
   if (len <= 9)  return 'text-5xl sm:text-6xl lg:text-7xl'
@@ -41,7 +41,7 @@ function Display({
     <section
       className="rounded-xl2 px-5 pt-4 pb-5 bg-white/70 dark:bg-ink-900/60
                  border border-white/60 dark:border-white/5 backdrop-blur-xl
-                 shadow-sm shadow-slate-900/5 dark:shadow-black/30 bg-grain"
+                 shadow-sm shadow-slate-900/5 dark:shadow-black/30"
       aria-label="Calculator display"
     >
       <div className="flex items-center justify-between mb-3">
@@ -90,7 +90,7 @@ function Display({
                        dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-white/10
                        transition-colors focus-visible:outline-2 focus-visible:outline-rose-500 focus-visible:outline-offset-2"
           >
-            <DeleteIcon />
+            <BackspaceIcon />
           </button>
         </div>
       </div>

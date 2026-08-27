@@ -42,6 +42,72 @@ on every keystroke because:
 - `Display`: `memo` + `handleCopy` in `useCallback`.
 - `HistoryList`: `memo` so typing doesn't repaint the history.
 
+### 2026-08-27 — Senior audit + 3D buttons + hook split
+
+**Stack under test:** React 19 + Vite 6 + Tailwind v4 + framer-motion 12.
+
+### Engine correctness (`npm test`)
+- 50 / 50 cases still pass after the hook split (`useExpression` /
+  `useHistory` / `useKeyboardShortcuts` / `useLocalStorageState`). The
+  tokenizer, parser and evaluator modules are unchanged.
+
+### Build (`npm run build`)
+- Clean build, ~600 ms.
+- `dist/index.html` 1.46 kB · `dist/assets/index-*.css` 46.49 kB ·
+  `dist/assets/index-*.js` 364.16 kB (gzip 115.08 kB).
+
+### Headless diagnostic (`scripts/diagnose.mjs`)
+- `Title`, `#root children === 1`, no console errors, no pageerrors.
+- The split hook bundle loads cleanly.
+
+### Senior audit — what was actually wrong
+- **Dead code:** `previewRef` in the old hook was set but never read.
+  Stale inline SVGs duplicated between `App.jsx` and `InstallBanner.jsx`.
+  Unused Tailwind tokens (`accent-100/200`, `paper-200`, `bg-grain`).
+  Unused `angleMode`/`toggleAngle` wiring on `useCalculator`.
+- **Weak logic / bugs:**
+  - `useCalculator` re-bundled `state` and `actions` on every keystroke,
+    invalidating every memo in the keypad.
+  - The keypad used `() => a.op('+')` inline arrows — fresh identity on
+    every render, defeating `React.memo`.
+  - `useKeyboardShortcuts` re-bound the listener every state change
+    because it closed over `calc` directly.
+  - `Icon.jsx` had a `DeleteIcon` that's actually a backspace glyph;
+    renamed `BackspaceIcon`.
+- **Perf:**
+  - Removed framer-motion's per-key `motion.button` and `stagger` in
+    favour of CSS `:active` transform + layered box-shadow. 3D-feel
+    without per-press JS work.
+  - Hook split keeps individual callback identities stable across input.
+  - Keypad now reads `actions` and `angleMode` through refs so its
+    handler map is computed once and never re-creates per render.
+- **Refactor:**
+  - `useCalculator` (304 lines) → 4 focused hooks (`useLocalStorageState`,
+    `useHistory`, `useExpression`, `useKeyboardShortcuts`) + a thin
+    `useCalculator` (60 lines) that composes them.
+  - `App.jsx` split into subcomponents (`AmbientBlobs`, `ThemeToggle`,
+    `ModeSwitch`, `OfflineBanner`) for readability.
+  - `Key.jsx` rewritten as a pure-CSS 3D key (no JS animation).
+
+### Visual / UX
+- **3D buttons.** Each variant (`digit` / `fn` / `op` / `equals` /
+  `danger` / `ghost`) has a layered box-shadow that defines the bevel
+  and a `:active` translate that flattens it on press. Top-edge
+  highlight gives the impression of a light source. The feel is
+  consistent across the keypad — same bevel language, different hues.
+- **No motion budget wasted on every key press.** The springy key
+  motion is gone; what remains is the layout-animated mode pill and
+  the theme toggle (where motion earns its keep).
+- **`prefers-reduced-motion`** still respected by framer-motion and the
+  global CSS rule.
+
+### Known limitations (still)
+- PWA install prompt on iOS Safari requires the Share sheet
+  (`scripts/diagnose.mjs` and `scripts/offline-test.mjs` can't simulate
+  that — manual).
+- Service worker offline flow exercised only by `scripts/offline-test.mjs`
+  (Puppeteer).
+
 ### Reported user bug — dot → operator still lagged
 **Root cause:** `useDeferredValue` keeps returning the *previous* value while
 new input arrives. When the user typed `.` then `+` quickly, `preview` was

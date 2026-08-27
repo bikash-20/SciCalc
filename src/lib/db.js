@@ -1,13 +1,9 @@
 /**
- * Thin promise-based IndexedDB wrapper for durable local persistence.
+ * Promise-based IndexedDB wrapper for durable history persistence.
  *
- * - `history` object store keyed by `ts` (the record's timestamp).
- * - Browser APIs are wrapped so this module NEVER throws in normal use —
- *   callers fall back to localStorage when IndexedDB is unavailable
- *   (private mode, sandboxed iframes, etc.).
- *
- * The calculator treats IndexedDB as the source of truth for history:
- * it has a far larger quota than localStorage and is transactional/durable.
+ * The store keys history entries by `ts` (their timestamp). All failures
+ * resolve silently so callers can fall back to localStorage without
+ * try/catching every call (private mode, sandboxed iframes, etc).
  */
 
 const DB_NAME = 'scicalc'
@@ -15,7 +11,6 @@ const DB_VERSION = 1
 const HISTORY_STORE = 'history'
 
 const idbSupported = typeof indexedDB !== 'undefined'
-
 let dbPromise = null
 
 function openDB() {
@@ -41,10 +36,8 @@ function openDB() {
     req.onblocked = () => reject(new Error('indexedDB blocked'))
   })
 
-  // allow retry after a failure
-  dbPromise.catch(() => {
-    dbPromise = null
-  })
+  // Allow retry after a failure (e.g. quota exceeded during a previous write)
+  dbPromise.catch(() => { dbPromise = null })
   return dbPromise
 }
 
@@ -55,10 +48,8 @@ export function getAllHistory() {
       .then((db) => {
         const tx = db.transaction(HISTORY_STORE, 'readonly')
         const req = tx.objectStore(HISTORY_STORE).getAll()
-        req.onsuccess = () =>
-          resolve(req.result.sort((a, b) => b.ts - a.ts))
+        req.onsuccess = () => resolve(req.result.sort((a, b) => b.ts - a.ts))
         req.onerror = () => resolve([])
-        tx.onerror = () => resolve([])
       })
       .catch(() => resolve([]))
   })

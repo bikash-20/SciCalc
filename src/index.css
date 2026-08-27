@@ -16,7 +16,6 @@
 
   /* Rose — primary brand / CTA highlight */
   --color-rose-100: #ffe4ec;
-  --color-rose-200: #ffc6d4;
   --color-rose-300: #ff9fb6;
   --color-rose-400: #fb7296;
   --color-rose-500: #f43f75;
@@ -30,45 +29,29 @@
   --color-amber-600: #d97706;
 
   /* Teal — accent, contrast, "go" actions */
+  --color-teal-100: #ccfbf1;
   --color-teal-300: #5eead4;
   --color-teal-400: #2dd4bf;
   --color-teal-500: #14b8a6;
   --color-teal-600: #0d9488;
+  --color-teal-800: #115e59;
 
-  /* Dark surfaces — kept, slightly warmer so it complements rose */
+  /* Dark surfaces — slightly warmer so it complements rose */
   --color-ink-950: #0a0a12;
   --color-ink-900: #11111b;
   --color-ink-800: #1a1a28;
   --color-ink-700: #252538;
 
-  /* Light surfaces — warm paper, not cold grey */
-  --color-paper-50:  #fbf7f4;
+  /* Light surfaces — warm paper */
+  --color-paper-50: #fbf7f4;
   --color-paper-100: #f5efe9;
-  --color-paper-200: #ece4dc;
-
-  /* Backwards-compat aliases (existing components reference accent-*, cyan-glow) */
-  --color-accent-300: var(--color-rose-300);
-  --color-accent-400: var(--color-rose-400);
-  --color-accent-500: var(--color-rose-500);
-  --color-accent-600: var(--color-rose-600);
-  --color-cyan-glow: var(--color-teal-400);
 
   --radius-xl2: 1.25rem;
-
-  --animate-pop-in: pop-in 0.25s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
-
-  @keyframes pop-in {
-    from { opacity: 0; transform: translateY(8px) scale(0.98); }
-    to   { opacity: 1; transform: translateY(0)   scale(1);    }
-  }
 }
 
 /* gradient utilities used in JSX */
 .bg-sunset {
   background-image: linear-gradient(135deg, #f43f75 0%, #fbbf24 50%, #2dd4bf 100%);
-}
-.bg-sunset-soft {
-  background-image: linear-gradient(135deg, #ffe4ec 0%, #fcd34d 50%, #5eead4 100%);
 }
 .bg-sunset-radial {
   background-image: radial-gradient(120% 100% at 0% 0%, #f43f75 0%, transparent 55%),
@@ -81,23 +64,11 @@
                     linear-gradient(180deg, #11111b 0%, #0a0a12 100%);
 }
 
-html,
-body,
-#root {
-  height: 100%;
-}
+html, body, #root { height: 100%; }
+html, body       { overscroll-behavior-y: none; }
 
-html,
-body {
-  overscroll-behavior-y: none;
-}
-
-.pt-safe {
-  padding-top: max(1.25rem, env(safe-area-inset-top));
-}
-.pb-safe {
-  padding-bottom: max(1.75rem, env(safe-area-inset-bottom));
-}
+.pt-safe { padding-top:    max(1.25rem, env(safe-area-inset-top)); }
+.pb-safe { padding-bottom: max(1.75rem, env(safe-area-inset-bottom)); }
 
 body {
   font-family: var(--font-ui);
@@ -113,21 +84,10 @@ body {
 
 /* Respect users who don't want motion */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
-}
-
-/* Subtle grain on the display card for an editorial, paper-like feel */
-.bg-grain {
-  background-image:
-    radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-    radial-gradient(rgba(0, 0, 0, 0.04) 1px, transparent 1px);
-  background-size: 4px 4px, 5px 5px;
-  background-position: 0 0, 2px 2px;
 }

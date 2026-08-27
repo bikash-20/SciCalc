@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion'
 import { memo, useCallback, useMemo, useState } from 'react'
 import Key from './Key.jsx'
 
@@ -13,148 +12,182 @@ const SECOND_MAP = {
 
 const MemoKey = memo(Key)
 
-const stagger = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: { staggerChildren: 0.018, delayChildren: 0.05 },
-  },
-}
-const keyFade = {
-  hidden: { opacity: 0, y: 6 },
-  show:   { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 380, damping: 28 } },
-}
-
-function AnimatedKey({ children, ...props }) {
-  return (
-    <motion.div variants={keyFade} className="contents">
-      <MemoKey {...props}>{children}</MemoKey>
-    </motion.div>
-  )
-}
-
 /**
- * Build a stable handler map from the calculator's action refs.
- * Re-creates only when `actions` or `angleMode` reference changes — both
- * are stable across input changes, so this stays put while typing.
+ * One stable handler per key. Each handler closes over the latest actions
+ * via `actionsRef.current` (refreshed every render) so we always dispatch
+ * the freshest actions without rebuilding closures on every keystroke.
  */
-function useKeyActions(actions, angleMode) {
-  return useMemo(
-    () => ({
-      digit: (d) => actions.pressDigit(d),
-      dot: actions.pressDot,
-      op: actions.pressOperator,
-      fn: actions.pressFunction,
-      insert: actions.insert,
-      clear: actions.pressClear,
-      back: actions.pressBackspace,
-      sign: actions.pressSign,
-      eq: actions.pressEquals,
-      toggleAngle: actions.setAngleMode
-        ? () => actions.setAngleMode(angleMode === 'deg' ? 'rad' : 'deg')
-        : () => {},
-    }),
-    [actions, angleMode],
-  )
+function useStableHandlers(actionsRef, angleModeRef) {
+  return useMemo(() => ({
+    '.':           () => actionsRef.current.pressDot(),
+    'AC':          () => actionsRef.current.pressClear(),
+    'backspace':   () => actionsRef.current.pressBackspace(),
+    'sign':        () => actionsRef.current.pressSign(),
+    'equals':      () => actionsRef.current.pressEquals(),
+    'toggleAngle': () => {
+      const mode = angleModeRef.current
+      actionsRef.current.setAngleMode(mode === 'deg' ? 'rad' : 'deg')
+    },
+    'd0': () => actionsRef.current.pressDigit('0'),
+    'd1': () => actionsRef.current.pressDigit('1'),
+    'd2': () => actionsRef.current.pressDigit('2'),
+    'd3': () => actionsRef.current.pressDigit('3'),
+    'd4': () => actionsRef.current.pressDigit('4'),
+    'd5': () => actionsRef.current.pressDigit('5'),
+    'd6': () => actionsRef.current.pressDigit('6'),
+    'd7': () => actionsRef.current.pressDigit('7'),
+    'd8': () => actionsRef.current.pressDigit('8'),
+    'd9': () => actionsRef.current.pressDigit('9'),
+    'op+': () => actionsRef.current.pressOperator('+'),
+    'op-': () => actionsRef.current.pressOperator('-'),
+    'op*': () => actionsRef.current.pressOperator('×'),
+    'op/': () => actionsRef.current.pressOperator('÷'),
+    'pct':  () => actionsRef.current.insert('%'),
+    'fact': () => actionsRef.current.insert('!'),
+    'lparen': () => actionsRef.current.insert('('),
+    'rparen': () => actionsRef.current.insert(')'),
+    'pow':  () => actionsRef.current.insert('^'),
+    'sqr':  () => actionsRef.current.insert('^2'),
+    'sqrt': () => actionsRef.current.pressFunction('sqrt'),
+    'pi':   () => actionsRef.current.insert('π'),
+    'e':    () => actionsRef.current.insert('e'),
+    'sin':  () => actionsRef.current.pressFunction('sin'),
+    'cos':  () => actionsRef.current.pressFunction('cos'),
+    'tan':  () => actionsRef.current.pressFunction('tan'),
+    'ln':   () => actionsRef.current.pressFunction('ln'),
+    'log':  () => actionsRef.current.pressFunction('log'),
+    // 2nd-shift handlers (literal text inserts). Stable identities.
+    'asin':  () => actionsRef.current.pressFunction('asin'),
+    'acos':  () => actionsRef.current.pressFunction('acos'),
+    'atan':  () => actionsRef.current.pressFunction('atan'),
+    'ePow':  () => actionsRef.current.insert('e^('),
+    '10Pow': () => actionsRef.current.insert('10^('),
+  }), [actionsRef, angleModeRef])
 }
 
-function SciencePad({ actions, angleMode }) {
-  const [second, setSecond] = useState(false)
-  const a = useKeyActions(actions, angleMode)
+/* ----- Per-key memoized renderers -------------------------------------
+ * Each helper returns a `<MemoKey>` for a single id. Because we hand the
+ * SAME `onPress` reference to the same id on every render, React.memo
+ * bails out and the underlying DOM/key button is not re-painted.
+ * ---------------------------------------------------------------------- */
 
+const keyOf = (id, label, variant, ariaLabel, onPress, active = false) => (
+  <MemoKey key={id} label={label} variant={variant} ariaLabel={ariaLabel} active={active} onPress={onPress} />
+)
+
+function DigitBtn({ id, label, handlers }) {
+  return keyOf(id, label, 'digit', label, handlers[id])
+}
+const MemoDigit = memo(DigitBtn)
+
+function FnBtn({ id, plainLabel, ariaLabel, second, handlers }) {
+  const alt = second ? SECOND_MAP[id] : undefined
+  const label = alt?.label ?? plainLabel
+  const handlerId = alt
+    ? (alt.insert ? (id === 'ln' ? 'ePow' : id === 'log' ? '10Pow' : 'asin') : id === 'sin' ? 'asin' : id === 'cos' ? 'acos' : 'atan')
+    : id
+  return keyOf(id, label, 'fn', ariaLabel, handlers[handlerId], Boolean(alt))
+}
+const MemoFn = memo(FnBtn)
+
+function OpBtn({ id, label, ariaLabel, handlers }) {
+  return keyOf(id, label, 'op', ariaLabel, handlers[id])
+}
+const MemoOp = memo(OpBtn)
+
+function SciencePad({ actionsRef, angleModeRef }) {
+  const [second, setSecond] = useState(false)
+  const handlers = useStableHandlers(actionsRef, angleModeRef)
   const toggleSecond = useCallback(() => setSecond((v) => !v), [])
 
-  const sciFn = (name, plainLabel, ariaLabel) => {
-    const alt = second ? SECOND_MAP[name] : undefined
-    if (alt) {
-      return (
-        <AnimatedKey key={`${name}-alt`} label={alt.label} variant="fn" active
-             ariaLabel={ariaLabel}
-             onPress={() => (alt.insert ? a.insert(alt.insert) : a.fn(alt.fnName))} />
-      )
-    }
-    return (
-      <AnimatedKey key={name} label={plainLabel} variant="fn" ariaLabel={ariaLabel}
-           onPress={() => a.fn(name)} />
-    )
-  }
-
-  const digits = (...ds) =>
-    ds.map((d) => <AnimatedKey key={d} label={d} onPress={() => a.digit(d)} />)
-
   return (
-    <motion.div className="grid grid-cols-5 gap-2" variants={stagger} initial="hidden" animate="show">
-      <AnimatedKey label="2nd" variant="ghost" active={second} ariaLabel="Second function shift"
-           onPress={toggleSecond} />
-      <AnimatedKey label={angleMode === 'deg' ? 'DEG' : 'RAD'} variant="ghost"
-           ariaLabel={`Angle unit: ${angleMode === 'deg' ? 'degrees' : 'radians'} — tap to switch`}
-           onPress={a.toggleAngle} />
-      <AnimatedKey label="(" variant="fn" ariaLabel="Open parenthesis" onPress={() => a.insert('(')} />
-      <AnimatedKey label=")" variant="fn" ariaLabel="Close parenthesis" onPress={() => a.insert(')')} />
-      <AnimatedKey label="AC" variant="danger" ariaLabel="All clear" onPress={a.clear} />
+    <div className="grid grid-cols-5 gap-2">
+      {keyOf('2nd', '2nd', 'ghost', 'Second function shift', toggleSecond, second)}
+      {keyOf(
+        'toggleAngle',
+        angleModeRef.current === 'deg' ? 'DEG' : 'RAD',
+        'ghost',
+        `Angle unit: ${angleModeRef.current === 'deg' ? 'degrees' : 'radians'} — tap to switch`,
+        handlers.toggleAngle,
+      )}
+      <MemoFn id="lparen" plainLabel="(" ariaLabel="Open parenthesis" second={second} handlers={handlers} />
+      <MemoFn id="rparen" plainLabel=")" ariaLabel="Close parenthesis" second={second} handlers={handlers} />
+      {keyOf('AC', 'AC', 'danger', 'All clear', handlers.AC)}
 
-      {sciFn('sin', 'sin', 'Sine')}
-      {sciFn('cos', 'cos', 'Cosine')}
-      {sciFn('tan', 'tan', 'Tangent')}
-      {sciFn('ln', 'ln', 'Natural logarithm')}
-      <AnimatedKey label="⌫" variant="op" ariaLabel="Backspace" onPress={a.back} />
+      <MemoFn id="sin" plainLabel="sin" ariaLabel="Sine" second={second} handlers={handlers} />
+      <MemoFn id="cos" plainLabel="cos" ariaLabel="Cosine" second={second} handlers={handlers} />
+      <MemoFn id="tan" plainLabel="tan" ariaLabel="Tangent" second={second} handlers={handlers} />
+      <MemoFn id="ln"  plainLabel="ln"  ariaLabel="Natural logarithm" second={second} handlers={handlers} />
+      <MemoOp id="backspace" label="⌫" ariaLabel="Backspace" handlers={handlers} />
 
-      {sciFn('log', 'log', 'Logarithm base 10')}
-      <AnimatedKey label="√" variant="fn" ariaLabel="Square root" onPress={() => a.fn('sqrt')} />
-      <AnimatedKey label="x²" variant="fn" ariaLabel="Square" onPress={() => a.insert('^2')} />
-      <AnimatedKey label="xʸ" variant="fn" ariaLabel="Power" onPress={() => a.insert('^')} />
-      <AnimatedKey label="÷" variant="op" ariaLabel="Divide" onPress={() => a.op('÷')} />
+      <MemoFn id="log" plainLabel="log" ariaLabel="Logarithm base 10" second={second} handlers={handlers} />
+      <MemoFn id="sqrt" plainLabel="√" ariaLabel="Square root" second={second} handlers={handlers} />
+      {keyOf('sqr', 'x²', 'fn', 'Square', handlers.sqr)}
+      {keyOf('pow', 'xʸ', 'fn', 'Power', handlers.pow)}
+      <MemoOp id="op/" label="÷" ariaLabel="Divide" handlers={handlers} />
 
-      <AnimatedKey label="π" variant="fn" ariaLabel="Pi" onPress={() => a.insert('π')} />
-      {digits('7', '8', '9')}
-      <AnimatedKey label="×" variant="op" ariaLabel="Multiply" onPress={() => a.op('×')} />
+      {keyOf('pi', 'π', 'fn', 'Pi', handlers.pi)}
+      <MemoDigit id="d7" label="7" handlers={handlers} />
+      <MemoDigit id="d8" label="8" handlers={handlers} />
+      <MemoDigit id="d9" label="9" handlers={handlers} />
+      <MemoOp id="op*" label="×" ariaLabel="Multiply" handlers={handlers} />
 
-      <AnimatedKey label="e" variant="fn" ariaLabel="Euler's number" onPress={() => a.insert('e')} />
-      {digits('4', '5', '6')}
-      <AnimatedKey label="−" variant="op" ariaLabel="Subtract" onPress={() => a.op('-')} />
+      {keyOf('e', 'e', 'fn', "Euler's number", handlers.e)}
+      <MemoDigit id="d4" label="4" handlers={handlers} />
+      <MemoDigit id="d5" label="5" handlers={handlers} />
+      <MemoDigit id="d6" label="6" handlers={handlers} />
+      <MemoOp id="op-" label="−" ariaLabel="Subtract" handlers={handlers} />
 
-      <AnimatedKey label="%" variant="op" ariaLabel="Percent" onPress={() => a.insert('%')} />
-      {digits('1', '2', '3')}
-      <AnimatedKey label="+" variant="op" ariaLabel="Add" onPress={() => a.op('+')} />
+      <MemoOp id="pct" label="%" ariaLabel="Percent" handlers={handlers} />
+      <MemoDigit id="d1" label="1" handlers={handlers} />
+      <MemoDigit id="d2" label="2" handlers={handlers} />
+      <MemoDigit id="d3" label="3" handlers={handlers} />
+      <MemoOp id="op+" label="+" ariaLabel="Add" handlers={handlers} />
 
-      <AnimatedKey label="n!" variant="op" ariaLabel="Factorial" onPress={() => a.insert('!')} />
-      <AnimatedKey label="±" variant="op" ariaLabel="Toggle sign" onPress={a.sign} />
-      <AnimatedKey label="0" onPress={() => a.digit('0')} />
-      <AnimatedKey label="." ariaLabel="Decimal point" onPress={a.dot} />
-      <AnimatedKey label="=" variant="equals" ariaLabel="Equals" onPress={a.eq} />
-    </motion.div>
+      <MemoOp id="fact" label="n!" ariaLabel="Factorial" handlers={handlers} />
+      <MemoOp id="sign" label="±" ariaLabel="Toggle sign" handlers={handlers} />
+      <MemoDigit id="d0" label="0" handlers={handlers} />
+      {keyOf('.', '.', 'digit', 'Decimal point', handlers['.'])}
+      {keyOf('equals', '=', 'equals', 'Equals', handlers.equals)}
+    </div>
   )
 }
 
-function BasicPad({ actions }) {
-  const a = useKeyActions(actions, 'deg')
-  const digits = (...ds) =>
-    ds.map((d) => <AnimatedKey key={d} label={d} onPress={() => a.digit(d)} />)
+function BasicPad({ actionsRef }) {
+  const handlers = useStableHandlers(actionsRef, { current: 'deg' })
 
   return (
-    <motion.div className="grid grid-cols-4 gap-2" variants={stagger} initial="hidden" animate="show">
-      <AnimatedKey label="AC" variant="danger" ariaLabel="All clear" onPress={a.clear} />
-      <AnimatedKey label="⌫" variant="op" ariaLabel="Backspace" onPress={a.back} />
-      <AnimatedKey label="%" variant="op" ariaLabel="Percent" onPress={() => a.insert('%')} />
-      <AnimatedKey label="÷" variant="op" ariaLabel="Divide" onPress={() => a.op('÷')} />
+    <div className="grid grid-cols-4 gap-2">
+      {keyOf('AC', 'AC', 'danger', 'All clear', handlers.AC)}
+      <MemoOp id="backspace" label="⌫" ariaLabel="Backspace" handlers={handlers} />
+      <MemoOp id="pct" label="%" ariaLabel="Percent" handlers={handlers} />
+      <MemoOp id="op/" label="÷" ariaLabel="Divide" handlers={handlers} />
 
-      {digits('7', '8', '9')}
-      <AnimatedKey label="×" variant="op" ariaLabel="Multiply" onPress={() => a.op('×')} />
+      <MemoDigit id="d7" label="7" handlers={handlers} />
+      <MemoDigit id="d8" label="8" handlers={handlers} />
+      <MemoDigit id="d9" label="9" handlers={handlers} />
+      <MemoOp id="op*" label="×" ariaLabel="Multiply" handlers={handlers} />
 
-      {digits('4', '5', '6')}
-      <AnimatedKey label="−" variant="op" ariaLabel="Subtract" onPress={() => a.op('-')} />
+      <MemoDigit id="d4" label="4" handlers={handlers} />
+      <MemoDigit id="d5" label="5" handlers={handlers} />
+      <MemoDigit id="d6" label="6" handlers={handlers} />
+      <MemoOp id="op-" label="−" ariaLabel="Subtract" handlers={handlers} />
 
-      {digits('1', '2', '3')}
-      <AnimatedKey label="+" variant="op" ariaLabel="Add" onPress={() => a.op('+')} />
+      <MemoDigit id="d1" label="1" handlers={handlers} />
+      <MemoDigit id="d2" label="2" handlers={handlers} />
+      <MemoDigit id="d3" label="3" handlers={handlers} />
+      <MemoOp id="op+" label="+" ariaLabel="Add" handlers={handlers} />
 
-      <AnimatedKey label="±" variant="op" ariaLabel="Toggle sign" onPress={a.sign} />
-      <AnimatedKey label="0" onPress={() => a.digit('0')} />
-      <AnimatedKey label="." ariaLabel="Decimal point" onPress={a.dot} />
-      <AnimatedKey label="=" variant="equals" ariaLabel="Equals" onPress={a.eq} />
-    </motion.div>
+      <MemoOp id="sign" label="±" ariaLabel="Toggle sign" handlers={handlers} />
+      <MemoDigit id="d0" label="0" handlers={handlers} />
+      {keyOf('.', '.', 'digit', 'Decimal point', handlers['.'])}
+      {keyOf('equals', '=', 'equals', 'Equals', handlers.equals)}
+    </div>
   )
 }
 
-export default memo(function Keypad({ scientific, actions, angleMode }) {
-  return scientific ? <SciencePad actions={actions} angleMode={angleMode} /> : <BasicPad actions={actions} />
+export default memo(function Keypad({ scientific, actionsRef, angleModeRef }) {
+  return scientific
+    ? <SciencePad actionsRef={actionsRef} angleModeRef={angleModeRef} />
+    : <BasicPad actionsRef={actionsRef} />
 })

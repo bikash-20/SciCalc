@@ -61,7 +61,8 @@ export const CloseIcon = (props) => (
   </svg>
 )
 
-export const DeleteIcon = (props) => (
+/** Backspace / delete-last glyph. */
+export const BackspaceIcon = (props) => (
   <svg {...base} {...props}>
     <path d="M20 5H9l-7 7 7 7h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2z" />
     <path d="m18 9-6 6M12 9l6 6" />
@@ -74,3 +75,25 @@ export const DownloadIcon = (props) => (
     <path d="m7 10 5 5 5-5M12 15V3" />
   </svg>
 )
+
+/** Calculator glyph used for the app icon and install banner. */
+export function CalcIcon(props) {
+  const { size = 20, ...rest } = props
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      {...rest}
+    >
+      <rect x="5" y="3" width="14" height="18" rx="3" />
+      <path d="M8 7h8M8.5 12h.01M12 12h.01M15.5 12h.01M8.5 16h.01M12 16h.01M15.5 16h.01" />
+    </svg>
+  )
+}
